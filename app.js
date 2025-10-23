@@ -9,15 +9,14 @@ const app = new express();
 
 // Controllers ----------------------------
 
-const usersPositionController = async (req, res) => {};
+const buildUsersSelectSql = (id, variant) => {
+  let sql = "";
+  const table = `Users
+  LEFT JOIN UserTypes ON Users.UserTypeID = UserTypes.UserTypeID
+  LEFT JOIN Positions ON Users.PositionID = Positions.PositionID
+  LEFT JOIN Departments ON Users.DepartmentID = Departments.DepartmentID
+  LEFT JOIN WorkStatus ON Users.WorkStatusID = WorkStatus.WorkStatusID`;
 
-const usersTypeController = async (req, res) => {
-  const id = req.params.utid;
-
-  // Build SQL
-
-  const table = "Users";
-  const whereField = "Users.UserTypeID";
   const fields = [
     "UserID",
     "UserTitle",
@@ -29,117 +28,69 @@ const usersTypeController = async (req, res) => {
     "Users.PositionID",
     "Users.DepartmentID",
     "Users.WorkStatusID",
+    "TypeName AS UserTypeName",
+    "PositionName",
+    "DepartmentName",
+    "WorkTypeName",
   ];
-  const extendedTable = `${table}
-    LEFT JOIN UserTypes ON Users.UserTypeID = UserTypes.UserTypeID
-    LEFT JOIN Positions ON Users.PositionID = Positions.PositionID
-    LEFT JOIN Departments ON Users.DepartmentID = Departments.DepartmentID
-    LEFT JOIN WorkStatus ON Users.WorkStatusID = WorkStatus.WorkStatusID`;
 
-  // FIX: Add the new fields from the joined tables
-  const extendedFields = `${fields.join(", ")},
-    TypeName AS UserTypeName,
-    PositionName,
-    DepartmentName,
-    WorkTypeName`;
-
-  const sql = `SELECT ${extendedFields} FROM ${extendedTable}  WHERE ${whereField}=${id} `;
-
-  // Execute Query
-
-  let isSuccess = false;
-
-  let message = "";
-
-  let result = null;
-
-  try {
-    [result] = await database.query(sql);
-
-    if (result.length === 0) message = "No records(s) found";
-    else {
-      isSuccess = true;
-      message = "record(s) successfully recovered";
-    }
-  } catch (error) {
-    message = `Faield to execute query: ${error.message}`;
+  switch (variant) {
+    case "Type":
+      sql = `SELECT ${fields} FROM ${table} WHERE Users.UserTypeID=${id}`;
+      break;
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE Users.UserID=${id} `;
   }
 
-  // responses
-
-  isSuccess ? res.status(200).json(result) : res.status(400).json({ message });
+  return sql;
 };
 
-const usersController = async (req, res) => {
-  const id = req.params.uid;
+const read = async (selectSql) => {
+  try {
+    const [result] = await database.query(selectSql);
+
+    return result.length === 0
+      ? { isSuccess: false, result: null, message: "No record(s) found" }
+      : {
+          isSuccess: true,
+          result: result,
+          message: "Record(s) successfully recovered",
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Faield to execute query: ${error.message}`,
+    };
+  }
+};
+
+const getUsersController = async (req, res, variant) => {
+  const id = req.params.id;
 
   // Build SQL
+  const sql = buildUsersSelectSql(id, variant);
 
-  const table = "Users";
-  const whereField = "UserID";
-  const fields = [
-    "UserID",
-    "UserTitle",
-    "UserFirstname",
-    "UserLastname",
-    "UserEmail",
-    "UserImageURL",
-    "Users.UserTypeID",
-    "Users.PositionID",
-    "Users.DepartmentID",
-    "Users.WorkStatusID",
-  ];
-  const extendedTable = `${table}
-    LEFT JOIN UserTypes ON Users.UserTypeID = UserTypes.UserTypeID
-    LEFT JOIN Positions ON Users.PositionID = Positions.PositionID
-    LEFT JOIN Departments ON Users.DepartmentID = Departments.DepartmentID
-    LEFT JOIN WorkStatus ON Users.WorkStatusID = WorkStatus.WorkStatusID`;
+  // Validate request
 
-  // FIX: Add the new fields from the joined tables
-  const extendedFields = `${fields.join(", ")},
-    TypeName AS UserTypeName,
-    PositionName,
-    DepartmentName,
-    WorkTypeName`;
-
-  let sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
-
-  if (id) sql += ` WHERE ${whereField}=${id} `;
-
-  // Execute Query
-
-  let isSuccess = false;
-
-  let message = "";
-
-  let result = null;
-
-  try {
-    [result] = await database.query(sql);
-
-    if (result.length === 0) message = "No records(s) found";
-    else {
-      isSuccess = true;
-      message = "record(s) successfully recovered";
-    }
-  } catch (error) {
-    message = `Faield to execute query: ${error.message}`;
-  }
+  // Access Data
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(404).json({ message });
 
   // responses
-
-  isSuccess ? res.status(200).json(result) : res.status(400).json({ message });
+  res.status(200).json(result);
 };
 
 // Endpoints ------------------------------
 
-app.get("/api/users", usersController);
+app.get("/api/users", (req, res) => getUsersController(req, res, null));
 
-app.get("/api/users/:uid", usersController);
+app.get("/api/users/:id", (req, res) => getUsersController(req, res, null));
 
-app.get("/api/users/type/:utid", usersTypeController);
-
-app.get("/api/users/position/:pid", usersPositionController);
+app.get("/api/users/type/:id", (req, res) =>
+  getUsersController(req, res, "Type")
+);
 
 // Start server ---------------------------
 const PORT = process.env.PORT || 5000;

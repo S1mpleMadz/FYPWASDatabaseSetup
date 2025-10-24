@@ -38,6 +38,17 @@ const buildUsersSelectSql = (id, variant) => {
     case "Type":
       sql = `SELECT ${fields} FROM ${table} WHERE Users.UserTypeID=${id}`;
       break;
+
+    case "Position":
+      sql = `SELECT ${fields} FROM ${table} WHERE Users.PositionID=${id}`;
+      break;
+    case "Department":
+      sql = `SELECT ${fields} FROM ${table} WHERE Users.DepartmentID=${id}`;
+      break;
+    case "WorkStatus":
+      sql = `SELECT ${fields} FROM ${table} WHERE Users.WorkStatusID=${id}`;
+      break;
+
     default:
       sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE Users.UserID=${id} `;
@@ -90,6 +101,18 @@ app.get("/api/users/:id", (req, res) => getUsersController(req, res, null));
 
 app.get("/api/users/type/:id", (req, res) =>
   getUsersController(req, res, "Type")
+);
+
+app.get("/api/users/position/:id", (req, res) =>
+  getUsersController(req, res, "Position")
+);
+
+app.get("/api/users/department/:id", (req, res) =>
+  getUsersController(req, res, "Department")
+);
+
+app.get("/api/users/workstatus/:id", (req, res) =>
+  getUsersController(req, res, "WorkStatus")
 );
 
 // Start server ---------------------------

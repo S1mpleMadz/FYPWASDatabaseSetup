@@ -86,9 +86,7 @@ const read = async (selectSql) => {
   }
 };
 
-const getUsersController = async (req, res, variant) => {
-  const id = req.params.id;
-
+const getUsersController = async (res, id, variant) => {
   // Build SQL
   const sql = buildUsersSelectSql(id, variant);
 
@@ -104,24 +102,26 @@ const getUsersController = async (req, res, variant) => {
 
 // Endpoints ------------------------------
 
-app.get("/api/users", (req, res) => getUsersController(req, res, null));
+app.get("/api/users", (req, res) => getUsersController(res, null, null));
 
-app.get("/api/users/:id", (req, res) => getUsersController(req, res, null));
+app.get("/api/users/:id", (req, res) =>
+  getUsersController(res, req.params.id, null)
+);
 
 app.get("/api/users/type/:id", (req, res) =>
-  getUsersController(req, res, "Type")
+  getUsersController(res, req.params.id, "Type")
 );
 
 app.get("/api/users/position/:id", (req, res) =>
-  getUsersController(req, res, "Position")
+  getUsersController(res, req.params.id, "Position")
 );
 
 app.get("/api/users/department/:id", (req, res) =>
-  getUsersController(req, res, "Department")
+  getUsersController(res, req.params.id, "Department")
 );
 
 app.get("/api/users/workstatus/:id", (req, res) =>
-  getUsersController(req, res, "WorkStatus")
+  getUsersController(res, req.params.id, "WorkStatus")
 );
 
 // Start server ---------------------------

@@ -18,6 +18,8 @@ app.use(function (req, res, next) {
 
 // Controllers ----------------------------
 
+//     GET
+
 const buildUsersSelectSql = (id, variant) => {
   let sql = "";
   const table = `Users
@@ -94,11 +96,84 @@ const getUsersController = async (res, id, variant) => {
 
   // Access Data
   const { isSuccess, result, message } = await read(sql);
-  if (!isSuccess) return res.status(404).json({ message });
+  if (!isSuccess) return res.status(400).json({ message });
 
   // responses
   res.status(200).json(result);
 };
+
+//    POST
+const buildUsersInsertSql = (record) => {
+  let table = "Users";
+  let mutableFields = [
+    "UserTitle",
+    "UserFirstname",
+    "UserLastname",
+    "UserEmail",
+    "UserImageURL",
+    "Users.UserTypeID",
+    "Users.PositionID",
+    "Users.DepartmentID",
+    "Users.WorkStatusID",
+  ];
+
+  return `INSERT INTO ${Users} SET
+        UserTitle= "${record["UserTitle"]}",
+        UserFirstname= "${record["UserFirstname"]}",
+        UserLastname= "${record["UserLastname"]}",
+        UserEmail= "${record["UserEmail"]}",
+        UserImageURL= "${record["UserImageURL"]}",
+        Users.UserTypeID=${record["UserTypeID"]},
+        Users.PositionID=${record["PositionID"]},
+        Users.DepartmentID=${record["DepartmentID"]},
+        Users.WorkStatusID=${record["WorkStatusID"]} `;
+};
+
+const create = async (sql) => {
+  try {
+    const status = await database.query(sql);
+
+    const recoveredRecordSql = buildUsersSelectSql(status[0].insertId, null);
+
+    const { isSuccess, result, message } = await read(recoveredRecordSql);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully created",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: ` failed to recover inserted record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
+const postUsersController = async (req, res) => {
+  // Build SQL
+  const sql = buildUsersInsertSql(req.body);
+
+  // Validate request
+
+  // Access Data
+  const { isSuccess, result, message } = await create(sql);
+  if (!isSuccess) return res.status(404).json({ message });
+
+  // responses
+  res.status(201).json(result);
+};
+
+//  PUT
+
+// DELETE
 
 // Endpoints ------------------------------
 
@@ -123,6 +198,8 @@ app.get("/api/users/department/:id", (req, res) =>
 app.get("/api/users/workstatus/:id", (req, res) =>
   getUsersController(res, req.params.id, "WorkStatus")
 );
+
+app.post("/api/users", postUsersController);
 
 // Start server ---------------------------
 const PORT = process.env.PORT || 5000;

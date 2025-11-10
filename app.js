@@ -14,6 +14,9 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Configure middleware -------------------
 
 // Controllers ----------------------------
@@ -117,16 +120,16 @@ const buildUsersInsertSql = (record) => {
     "Users.WorkStatusID",
   ];
 
-  return `INSERT INTO ${Users} SET
+  return `INSERT INTO ${table} SET
         UserTitle= "${record["UserTitle"]}",
         UserFirstname= "${record["UserFirstname"]}",
         UserLastname= "${record["UserLastname"]}",
         UserEmail= "${record["UserEmail"]}",
         UserImageURL= "${record["UserImageURL"]}",
-        Users.UserTypeID=${record["UserTypeID"]},
-        Users.PositionID=${record["PositionID"]},
-        Users.DepartmentID=${record["DepartmentID"]},
-        Users.WorkStatusID=${record["WorkStatusID"]} `;
+        UserTypeID=${record["UserTypeID"]},
+        PositionID=${record["PositionID"]},
+        DepartmentID=${record["DepartmentID"]},
+        WorkStatusID=${record["WorkStatusID"]} `;
 };
 
 const create = async (sql) => {

@@ -106,6 +106,14 @@ const getUsersController = async (res, id, variant) => {
 };
 
 //    POST
+
+const buildSetFields = (fields) =>
+  fields.reduce(
+    (setSQL, field, index) =>
+      setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
+    "SET "
+  );
+
 const buildUsersInsertSql = (record) => {
   let table = "Users";
   let mutableFields = [
@@ -114,27 +122,18 @@ const buildUsersInsertSql = (record) => {
     "UserLastname",
     "UserEmail",
     "UserImageURL",
-    "Users.UserTypeID",
-    "Users.PositionID",
-    "Users.DepartmentID",
-    "Users.WorkStatusID",
+    "UserTypeID",
+    "PositionID",
+    "DepartmentID",
+    "WorkStatusID",
   ];
 
-  return `INSERT INTO ${table} SET
-        UserTitle= "${record["UserTitle"]}",
-        UserFirstname= "${record["UserFirstname"]}",
-        UserLastname= "${record["UserLastname"]}",
-        UserEmail= "${record["UserEmail"]}",
-        UserImageURL= "${record["UserImageURL"]}",
-        UserTypeID=${record["UserTypeID"]},
-        PositionID=${record["PositionID"]},
-        DepartmentID=${record["DepartmentID"]},
-        WorkStatusID=${record["WorkStatusID"]} `;
+  return `INSERT INTO ${table} ` + buildSetFields(mutableFields);
 };
 
-const create = async (sql) => {
+const create = async (sql, record) => {
   try {
-    const status = await database.query(sql);
+    const status = await database.query(sql, record);
 
     const recoveredRecordSql = buildUsersSelectSql(status[0].insertId, null);
 
@@ -167,7 +166,7 @@ const postUsersController = async (req, res) => {
   // Validate request
 
   // Access Data
-  const { isSuccess, result, message } = await create(sql);
+  const { isSuccess, result, message } = await create(sql, req.body);
   if (!isSuccess) return res.status(404).json({ message });
 
   // responses

@@ -131,7 +131,7 @@ const buildUsersInsertSql = (record) => {
   return `INSERT INTO ${table} ` + buildSetFields(mutableFields);
 };
 
-const create = async (sql, record) => {
+const createUsers = async (sql, record) => {
   try {
     const status = await database.query(sql, record);
 
@@ -166,7 +166,7 @@ const postUsersController = async (req, res) => {
   // Validate request
 
   // Access Data
-  const { isSuccess, result, message } = await create(sql, req.body);
+  const { isSuccess, result, message } = await createUsers(sql, req.body);
   if (!isSuccess) return res.status(404).json({ message });
 
   // responses

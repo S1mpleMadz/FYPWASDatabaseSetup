@@ -21,8 +21,28 @@ app.use(express.urlencoded({ extended: true }));
 
 // Controllers ----------------------------
 
-//     GET
+//    ---------------------------- GET ----------------------------
+const read = async (selectSql) => {
+  try {
+    const [result] = await database.query(selectSql);
 
+    return result.length === 0
+      ? { isSuccess: false, result: null, message: "No record(s) found" }
+      : {
+          isSuccess: true,
+          result: result,
+          message: "Record(s) successfully recovered",
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Faield to execute query: ${error.message}`,
+    };
+  }
+};
+
+// USER
 const buildUsersSelectSql = (id, variant) => {
   let sql = "";
   const table = `Users
@@ -71,26 +91,6 @@ const buildUsersSelectSql = (id, variant) => {
   return sql;
 };
 
-const read = async (selectSql) => {
-  try {
-    const [result] = await database.query(selectSql);
-
-    return result.length === 0
-      ? { isSuccess: false, result: null, message: "No record(s) found" }
-      : {
-          isSuccess: true,
-          result: result,
-          message: "Record(s) successfully recovered",
-        };
-  } catch (error) {
-    return {
-      isSuccess: false,
-      result: null,
-      message: `Faield to execute query: ${error.message}`,
-    };
-  }
-};
-
 const getUsersController = async (res, id, variant) => {
   // Build SQL
   const sql = buildUsersSelectSql(id, variant);
@@ -105,7 +105,131 @@ const getUsersController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
-//    POST
+// TYPES
+
+const buildTypesSelectSql = (id, variant) => {
+  let sql = "";
+  const table = `usertypes`;
+
+  const fields = ["UserTypeID", "TypeName", "TypeDescription"];
+
+  switch (variant) {
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE usertypes.UserTypeID=${id} `;
+  }
+
+  return sql;
+};
+
+const getTypesController = async (res, id, variant) => {
+  // Build SQL
+  const sql = buildTypesSelectSql(id, variant);
+
+  // Validate request
+
+  // Access Data
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // responses
+  res.status(200).json(result);
+};
+
+// WORK Status
+
+const buildWorkStatusSelectSql = (id, variant) => {
+  let sql = "";
+  const table = `workstatus`;
+
+  const fields = ["WorkStatusID", "WorkTypeName", "WorkTypeDetail"];
+
+  switch (variant) {
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE workstatus.WorkStatusID=${id} `;
+  }
+
+  return sql;
+};
+
+const getWorkStatusController = async (res, id, variant) => {
+  // Build SQL
+  const sql = buildWorkStatusSelectSql(id, variant);
+
+  // Validate request
+
+  // Access Data
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // responses
+  res.status(200).json(result);
+};
+
+// Position
+
+const buildPositionSelectSql = (id, variant) => {
+  let sql = "";
+  const table = `positions`;
+
+  const fields = ["PositionID", "PositionName", "PositionDescription"];
+
+  switch (variant) {
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE positions.PositionID=${id} `;
+  }
+
+  return sql;
+};
+
+const getPositionController = async (res, id, variant) => {
+  // Build SQL
+  const sql = buildPositionSelectSql(id, variant);
+
+  // Validate request
+
+  // Access Data
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // responses
+  res.status(200).json(result);
+};
+
+// Departments
+
+const buildDepartmentsSelectSql = (id, variant) => {
+  let sql = "";
+  const table = `departments`;
+
+  const fields = ["DepartmentID", "DepartmentName", "DepartmentDesciption"];
+
+  switch (variant) {
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE departments.DepartmentID=${id} `;
+  }
+
+  return sql;
+};
+
+const getDepartmentsController = async (res, id, variant) => {
+  // Build SQL
+  const sql = buildDepartmentsSelectSql(id, variant);
+
+  // Validate request
+
+  // Access Data
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // responses
+  res.status(200).json(result);
+};
+
+//    ----------------------------  POST ------------------------------
 
 const buildSetFields = (fields) =>
   fields.reduce(
@@ -178,7 +302,9 @@ const postUsersController = async (req, res) => {
 // DELETE
 
 // Endpoints ------------------------------
+// GET
 
+// User
 app.get("/api/users", (req, res) => getUsersController(res, null, null));
 
 app.get("/api/users/:id", (req, res) =>
@@ -201,6 +327,41 @@ app.get("/api/users/workstatus/:id", (req, res) =>
   getUsersController(res, req.params.id, "WorkStatus")
 );
 
+// Types
+app.get("/api/types", (req, res) => getTypesController(res, null, null));
+
+app.get("/api/types/:id", (req, res) =>
+  getTypesController(res, req.params.id, null)
+);
+
+// Work status
+app.get("/api/workstatus", (req, res) =>
+  getWorkStatusController(res, null, null)
+);
+
+app.get("/api/workstatus/:id", (req, res) =>
+  getWorkStatusController(res, req.params.id, null)
+);
+
+// Positions
+app.get("/api/positions", (req, res) => getPositionController(res, null, null));
+
+app.get("/api/positions/:id", (req, res) =>
+  getPositionController(res, req.params.id, null)
+);
+
+// Departments
+app.get("/api/departments", (req, res) =>
+  getDepartmentsController(res, null, null)
+);
+
+app.get("/api/departments/:id", (req, res) =>
+  getDepartmentsController(res, req.params.id, null)
+);
+
+// POST API
+
+// User
 app.post("/api/users", postUsersController);
 
 // Start server ---------------------------

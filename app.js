@@ -109,7 +109,7 @@ const getUsersController = async (res, id, variant) => {
 
 const buildTypesSelectSql = (id, variant) => {
   let sql = "";
-  const table = `usertypes`;
+  const table = `UserTypes`;
 
   const fields = ["UserTypeID", "TypeName", "TypeDescription"];
 
@@ -140,7 +140,7 @@ const getTypesController = async (res, id, variant) => {
 
 const buildWorkStatusSelectSql = (id, variant) => {
   let sql = "";
-  const table = `workstatus`;
+  const table = `WorkStatus`;
 
   const fields = ["WorkStatusID", "WorkTypeName", "WorkTypeDetail"];
 
@@ -171,7 +171,7 @@ const getWorkStatusController = async (res, id, variant) => {
 
 const buildPositionSelectSql = (id, variant) => {
   let sql = "";
-  const table = `positions`;
+  const table = `Positions`;
 
   const fields = ["PositionID", "PositionName", "PositionDescription"];
 
@@ -202,7 +202,7 @@ const getPositionController = async (res, id, variant) => {
 
 const buildDepartmentsSelectSql = (id, variant) => {
   let sql = "";
-  const table = `departments`;
+  const table = `Departments`;
 
   const fields = ["DepartmentID", "DepartmentName", "DepartmentDesciption"];
 
